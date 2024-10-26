@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Monitoring - Map</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Air Quality Monitoring & Visualization</h1>
+        <div id="map"></div>
+        <h2>Air Quality Data</h2>
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>AQI</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body">
+                <!-- Data rows will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Fetch air quality data from the backend
+        fetch('http://127.0.0.1:5000/api/airquality')
+            .then(response => response.json())
+            .then(data => {
+                const dataTableBody = document.getElementById('data-table-body');
+
+                data.forEach(point => {
+                    // Create a row for the table
+                    const row = `<tr>
+                        <td>${point.location}</td>
+                        <td>${point.latitude}</td>
+                        <td>${point.longitude}</td>
+                        <td>${point.aqi}</td>
+                    </tr>`;
+                    dataTableBody.insertAdjacentHTML('beforeend', row);
+
+                    // Add marker to the map
+                    L.marker([point.latitude, point.longitude]).addTo(map)
+                        .bindPopup(<b>${point.location}</b><br>AQI: ${point.aqi});
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    </script>
+
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin: 20px 0;
+        }
+    </style>
+</body>
+</html>
